@@ -45,9 +45,18 @@ SPACESHIP_FIELD_CNT  	= 0xffff110c
 .text
 
 main:
-	# your code goes here
-	# for the interrupt-related portions, you'll want to
-	# refer closely to example.s - it's probably easiest
-	# to copy-paste the relevant portions and then modify them
-	# keep in mind that example.s has bugs, as discussed in section
+game_start_subroutine:
+
+find_largest_cluster_strategy:
+
+strategy_B:
+
+strategy_C:
+
+scan_subroutine:
+
+move_to_location_subroutine:
+
+game_over:
+	#clean up local vars
 	jr	$ra
