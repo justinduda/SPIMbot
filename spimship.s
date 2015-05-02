@@ -1,4 +1,12 @@
+# syscall constants
+PRINT_STRING = 4
+
 .data
+
+.align 2
+sectors: .space 256
+SCAN_COMP: .space 4
+planet_info: .space 32
 
 # movement memory-mapped I/O
 VELOCITY            = 0xffff0010
@@ -137,8 +145,8 @@ done:
 main:
 
 enable_interrupts:
-	li	$t4, TIMER_MASK		# timer interrupt enable bit
-    or $t4, $t4, SCAN_MASK  # scan interrupt bit
+	#li	$t4, TIMER_MASK		# timer interrupt enable bit
+    li $t4, SCAN_MASK  # scan interrupt bit
     or  $t4, $t4, ENERGY_MASK
 	or	$t4, $t4, 1		# global interrupt enable
 	mtc0	$t4, $12		# set interrupt mask (Status register)
@@ -301,7 +309,7 @@ at_sector_y:
     sw $t3, FIELD_STRENGTH 
 
 	#lower field strength to conserve energy
-    li $t3, 5
+    li $t3, 6
     sw $t3, FIELD_STRENGTH
 
 
@@ -309,7 +317,7 @@ at_sector_y:
 # Go to your planet
 #
 
-    li $t3, 4
+    li $t3, 3
     sw $t3, VELOCITY
 
 align_x_to_plan:
@@ -352,7 +360,14 @@ adj_x_to_plan:
 
 at_plan_x: 
 
-#increase 
+#briefly increase field strength so that dust isn't lost during a turn
+
+li $t3, 10
+sw $t3, FIELD_STRENGTH
+
+	#reduce field strength again
+	li $t3, 6
+	sw $t3, FIELD_STRENGTH
 
 align_plan_y:
     lw $t3, BOT_Y
@@ -367,6 +382,8 @@ bot_is_above_plan:
     sw $t3, ANGLE
     li $t3, 1
     sw $t3, ANGLE_CONTROL
+
+
     j adj_y_to_plan
 
 bot_is_below_plan:
@@ -374,9 +391,13 @@ bot_is_below_plan:
     sw $t3, ANGLE
     li $t3, 1
     sw $t3, ANGLE_CONTROL
+
+
     j adj_y_to_plan
 
 adj_y_to_plan:
+
+	
     lw $t3, BOT_Y
     beq $t3, $t2, align_x_to_plan
 
@@ -384,7 +405,11 @@ adj_y_to_plan:
     
 
 at_plan_xy: 
-    
+
+#
+#returned dust to our planet
+#
+   
     li $t0, 0
     sw $t0, FIELD_STRENGTH
     
