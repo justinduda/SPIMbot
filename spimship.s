@@ -1,13 +1,6 @@
 # syscall constants
 PRINT_STRING = 4
 
-.data
-
-.align 2
-sectors: .space 256
-SCAN_COMP: .space 4
-planet_info: .space 32
-
 # movement memory-mapped I/O
 VELOCITY            = 0xffff0010
 ANGLE               = 0xffff0014
@@ -48,7 +41,14 @@ SPIMBOT_LEXICON_REQUEST 	= 0xffff1008
 # I/O used in competitive scenario 
 INTERFERENCE_MASK 	= 0x8000 
 INTERFERENCE_ACK 	= 0xffff1304
-SPACESHIP_FIELD_CNT  	= 0xffff110c 
+SPACESHIP_FIELD_CNT = 0xffff110c 
+
+.data
+.align 2
+
+sectors:	.space 256
+SCAN_COMP:	.space 4
+planet_info:.space 32
 
 #
 #end I/O names/fields
@@ -58,20 +58,19 @@ SPACESHIP_FIELD_CNT  	= 0xffff110c
 #start interrupt handlers
 #
 
-
-.kdata				# interrupt handler data (separated just for readability)
-
+.kdata					# interrupt handler data (separated just for readability)
 chunkIH:	.space 8	# space for two registers
 
 
 non_intrpt_str:	.asciiz "Non-interrupt exception\n"
-
 unhandled_str:	.asciiz "Unhandled interrupt type\n"
 
 .ktext 0x80000180
+
 interrupt_handler:
 .set noat
-	move	$k1, $at		# Save $at                               
+	move	$k1, $at		# Save $at
+
 .set at
 	la	$k0, chunkIH
 	sw	$a0, 0($k0)		# Get some free registers                  
@@ -87,7 +86,6 @@ interrupt_dispatch:			# Interrupt:
 	mfc0	$k0, $13		# Get Cause register, again                 
 	beq	$k0, 0, done		# handled all outstanding interrupts     
 
-
 	and	$a0, $k0, ENERGY_MASK	# is there a timer interrupt?
 	bne	$a0, 0, energy_interrupt
     
@@ -100,7 +98,6 @@ interrupt_dispatch:			# Interrupt:
 	la	$a0, unhandled_str
 	syscall 
 	j	done
-
 
 scan_interrupt:
     li $a0, 1
@@ -146,10 +143,10 @@ main:
 
 enable_interrupts:
 	#li	$t4, TIMER_MASK		# timer interrupt enable bit
-    li $t4, SCAN_MASK  # scan interrupt bit
-    or  $t4, $t4, ENERGY_MASK
-	or	$t4, $t4, 1		# global interrupt enable
-	mtc0	$t4, $12		# set interrupt mask (Status register)
+    li 	$t4	SCAN_MASK  		# scan interrupt bit
+    or  $t4	$t4	ENERGY_MASK
+	or	$t4	$t4	1			# global interrupt enable
+	mtc0	$t4	$12			# set interrupt mask (Status register)
 
 game_start_subroutine:
 	# enable interrupts
@@ -414,9 +411,6 @@ at_plan_xy:
     sw $t0, FIELD_STRENGTH
     
     j start_over
-
-
-
 
 
 infinite: 
