@@ -326,9 +326,19 @@ align_x_to_plan:
 
     lw $t1, 0($t0)
     lw $t2, 4($t0)
-    
-    bne $t3, $t1, xy_not_eq
-    bne $t4, $t2, xy_not_eq
+
+	#If bot is within 3 x-spaces to planet, good enough
+	sub $t5, $t3, $t1
+	abs $t5, $t5
+	bgt $t5, 3, xy_not_eq 
+
+	#If bot is within 3 y-spaces to planet, good enough
+	sub $t5, $t4, $t2
+	abs $t5, $t5
+	bgt $t5, 3, xy_not_eq 
+	
+    #bne $t3, $t1, xy_not_eq
+    #bne $t4, $t2, xy_not_eq
     j at_plan_xy
 
 xy_not_eq:
@@ -350,7 +360,12 @@ bot_on_right_plan:
 
 adj_x_to_plan:
     lw $t3, BOT_X
-    beq $t3, $t1, at_plan_x
+
+    #beq $t3, $t1, at_plan_x
+	#If bot is within 3 x-spaces to planet, good enough
+	sub $t5, $t3, $t1
+	abs $t5, $t5
+	ble $t5, 3, at_plan_x
 
     j align_x_to_plan
     
@@ -359,12 +374,12 @@ at_plan_x:
 
 #briefly increase field strength so that dust isn't lost during a turn
 
-li $t3, 10
-sw $t3, FIELD_STRENGTH
+	#li $t3, 10
+	#sw $t3, FIELD_STRENGTH
 
 	#reduce field strength again
-	li $t3, 6
-	sw $t3, FIELD_STRENGTH
+	#li $t3, 6
+	#sw $t3, FIELD_STRENGTH
 
 align_plan_y:
     lw $t3, BOT_Y
@@ -396,7 +411,11 @@ adj_y_to_plan:
 
 	
     lw $t3, BOT_Y
-    beq $t3, $t2, align_x_to_plan
+    #beq $t3, $t2, align_x_to_plan
+	#If bot is within 3 y-spaces to planet, good enough
+	sub $t5, $t3, $t2
+	abs $t5, $t5
+	ble $t5, 3, align_x_to_plan
 
     j align_plan_y
     
