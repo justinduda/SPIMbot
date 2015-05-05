@@ -1,0 +1,13 @@
+Our Strategy is outlines as follows:
+
+1. Scan every sector and find sector with greatest number of dust
+2. Travel quickly to that sector
+3. Turn on gravity field 
+4. Return to planet relatively slowly
+5. Do a puzzle to get more energy ( see below for puzzle solving strategy)
+6. Determine current sector
+7. Goto step 1, but this time ignore (don't scan) the sector the bot is currrently in
+
+
+
+Puzzle Solving Stratey:
