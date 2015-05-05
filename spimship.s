@@ -220,7 +220,7 @@ start_over:
     sw $t0, FIELD_STRENGTH
 
     lw $t1, ENERGY 
-    jal puzzle_solver
+    jal puzzle_solver 
     
     j start_over
 
@@ -525,9 +525,6 @@ at_plan_xy:
 ###PUZZLE SOLVER#################################################
 
 
-
-
-#find words
 puzzle_solver:
     sub $sp, $sp, 16
     sw $s7, 4($sp)
@@ -541,23 +538,28 @@ puzzle_solver:
 
     sw $s5, 12($sp)
     la $s5, solution_struct
-    sw $s5, SPIMBOT_SOLVE_REQUEST
+   
 
-    lw $t0, 4($s7)    #lexicon array of char pointers
+    la $t0, 4($s7)    #lexicon array of char pointers
     lw $t1, 0($s7)    #lexicon_size int
     move $a0, $t0
     move $a1, $t1
 
     jal find_words
-
+    lw     $t0, offset
+    div    $t0, $t0, 2
+    la     $t1, solution_struct
+    sw     $t0, 0($t1)
+    sw     $t1, SPIMBOT_SOLVE_REQUEST
 
     lw $ra, 0($sp)
     lw $s7, 4($sp)
     lw $s6, 8($sp)
     lw $s5, 12($sp)
     add $sp, $sp, 16
+    jr $ra
 
-.globl find_words
+
 find_words:
     sub $sp, $sp, 40
     sw  $ra, 0($sp)
@@ -601,11 +603,10 @@ fw_k:
     jal horiz_strncmp
     ble $v0, 0, fw_vert     # !(word_end > 0)
     move    $a0, $s8        # word
-    #move   $a1, $s5        # start
-    #move   $a2, $v0        # word_end
-    sub     $t0, $v0, $s5
-    move    $a1, $t0
+    move   $a1, $s5        # start
+    move   $a2, $v0        # word_end
     jal record_word
+    
 
 fw_vert:
     move    $a0, $s8        # word
@@ -614,10 +615,8 @@ fw_vert:
     jal vert_strncmp
     ble $v0, 0, fw_k_next   # !(word_end > 0)
     move    $a0, $s8        # word
-    #move   $a1, $s5        # start
-    #move   $a2, $v0        # word_end
-    sub     $t0, $v0, $s5
-    move    $a1, $t0
+    move   $a1, $s5        # start
+    move   $a2, $v0        # word_end
     jal record_word
 
 fw_k_next:
@@ -650,11 +649,16 @@ fw_done:
 #record_word
 .globl record_word
 record_word:
-    lw  $t0, solution_struct
+    la  $t0, solution_struct
+    add $t4, $t0, 4
     lw  $t1, offset
-    add $t2, $t1, 4
-    sw  $a0, 0($t2)
+    mul $t3, $t1, 4
+    add $t2, $t4, $t3
+    sw  $a1, 0($t2)
+    sw  $a2, 4($t2)
 
+    add $t1, $t1, 2
+    sw  $t1, offset
     jr  $ra
 
 #get character
@@ -771,15 +775,15 @@ part3:
 
     
 loop_done: li  $v0, 0
-      lw  $ra, 0($sp)
-      lw  $s0, 4($sp)
-      lw  $s1, 8($sp)
-      lw  $s2, 12($sp)
-      lw  $s3, 16($sp)
-      lw  $s4, 20($sp)
-      lw  $s5, 24($sp)
-      lw  $s6, 28($sp)
-      add $sp, $sp, 32
-      jr  $ra
+    lw  $ra, 0($sp)
+    lw  $s0, 4($sp)
+    lw  $s1, 8($sp)
+    lw  $s2, 12($sp)
+    lw  $s3, 16($sp)
+    lw  $s4, 20($sp)
+    lw  $s5, 24($sp)
+    lw  $s6, 28($sp)
+    add $sp, $sp, 32
+    jr  $ra
 
 ###END PUZZLE SOLVER##############################################
