@@ -49,6 +49,7 @@ SPACESHIP_FIELD_CNT = 0xffff110c
 sectors:	.space 256
 SCAN_COMP:	.space 4
 planet_info:.space 32
+energy_low: .space 4
 
 #
 #end I/O names/fields
@@ -168,18 +169,69 @@ start_over:
     li $t0, 0
     sw $t0, VELOCITY
 
-#time_check:
-#	# request timer interrupt
-#	lw	$t0, TIMER		# read current time
-#	add	$t0, $t0, 50		# add 50 to current time
-#	sw	$t0, TIMER		# request timer interrupt in 50 cycles
-#
-#	#li	$a0, 10
-#	#sw	$a0, VELOCITY		# drive
+
     li $t0, 0             #set t0 to 0
 
+## Scan for sector with most dust
+    jal scan_sectors
+## $v0 holds sector with most dust
+
+
+    move $a0, $v0
+
+    jal drive_to_sect
+
+#
+# Bot reached ~middle of sector with the most amount of dust
+#
+
+	#max field strength very quickly to pull dust to ship
+    li $t3, 10
+    sw $t3, FIELD_STRENGTH 
+
+
+	#lower field strength to conserve energy
+    li $t3, 6
+    sw $t3, FIELD_STRENGTH
+
+    li $t3, 3
+    sw $t3, VELOCITY
+
+#
+# Go to your planet
+#
+
+    jal drive_to_planet
+
+#
+#returned dust to our planet
+#
+   
+    li $t0, 0
+    sw $t0, FIELD_STRENGTH
+
+    lw $t1, ENERGY 
+    jal solve_puzzle
+    
+    j start_over
+
+##################    END MAIN #####################
+
+
+###############
+# Subroutines #
+###############
+
+
+### Scanning ######################################################3
+scan_sectors:
+    sub $sp, $sp, 4
+    sw $ra, 0($sp)
+
 sectors_scanning:
+    
     beq $t0, 64, scans_done
+    
 
     la $t1, sectors
     sw $t0, SCAN_SECTOR    #store t0 [0,63] to SCAN_SECTOR I/O
@@ -202,7 +254,6 @@ one_scan_done:
     addi $t0, $t0, 1 
     j sectors_scanning
     
-.globl scans_done
 scans_done:
 
     #store the sector address with the greatest number of dust in t0
@@ -231,18 +282,21 @@ found_dense_sector:     #t4 has number of particles in densest sector
     div $t2, $t0 
     mflo $t2            #t2 has sector number of densest sector
 
-#
-# end scanning sectors
-# $t2 has sector number of densest sector (out of 64)
-#
+    move $v0, $t2
 
+    lw $ra, 0($sp)
+    add $sp, $sp, 4
+    
+    jr $ra
 
+###END SCANNING ##################################################
 
-# compute desired coords
-# go to correct x , then correct y
-#
+### DRIVE TO SECTOR AT $A0 #######################################
 drive_to_sect:         
-    move $t0, $t2       #t0 has sector numebr of densest sector
+    sub $sp, $sp, 4
+    sw $ra, 0($sp)
+
+    move $t0, $a0       #t0 has sector numebr of densest sector
     li $t1, 8
     div $t0, $t1
     mflo $t2            #sector y numb
@@ -308,25 +362,20 @@ adj_y_to_sec:
 
 at_sector_y: 
 
-#
-# Bot reached ~middle of sector with the most amount of dust
-#
+    move $v0, $t0
+    lw $ra, 0($sp)
+    add $sp, $sp, 4
 
-	#max field strength very quickly to pull dust to ship
-    li $t3, 10
-    sw $t3, FIELD_STRENGTH 
-
-	#lower field strength to conserve energy
-    li $t3, 6
-    sw $t3, FIELD_STRENGTH
+    jr $ra
 
 
-#
-# Go to your planet
-#
+### END DRIVE TO SECTOR AT $A0 ###################################
 
-    li $t3, 3
-    sw $t3, VELOCITY
+
+### DRIVE TO YOUR PLANET #########################################
+drive_to_planet:
+    sub $sp, $sp, 4
+    sw $ra, 0($sp)
 
 align_x_to_plan:
     
@@ -433,19 +482,17 @@ adj_y_to_plan:
 
 at_plan_xy: 
 
-#
-#returned dust to our planet
-#
-   
-    li $t0, 0
-    sw $t0, FIELD_STRENGTH
-
-    lw $t1, ENERGY 
-    jal solve_puzzle
+    #maybe calculate sector number and return that
+    lw $ra, 0($sp)
+    add $sp, $sp, 4
+    jr $ra
     
-    j start_over
 
+### END DRIVE TO YOUR PLANET #####################################
+
+
+###PUZZLE SOLVER#################################################
 solve_puzzle:
     jr $ra
 
-
+###END PUZZLE SOLVER##############################################
