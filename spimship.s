@@ -220,7 +220,7 @@ start_over:
     sw $t0, FIELD_STRENGTH
 
     lw $t1, ENERGY 
-    #jal puzzle_solver
+    jal puzzle_solver
     
     j start_over
 
