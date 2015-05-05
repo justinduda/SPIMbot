@@ -166,8 +166,6 @@ enable_interrupts:
     or  $t4 $t4 1           # global interrupt enable
     mtc0    $t4 $12         # set interrupt mask (Status register)
 
-game_start_subroutine:
-    # enable interrupts
 
 start_over:
     li $t0, 0
@@ -214,14 +212,6 @@ start_over:
 #so turn field off
 #
    
-    li $t0, 0
-    sw $t0, FIELD_STRENGTH
-
-    
-
-#
-#returned dust to our planet
-#
    
     li $t0, 0
     sw $t0, FIELD_STRENGTH
@@ -243,6 +233,8 @@ start_over:
 scan_sectors:
     sub $sp, $sp, 4
     sw $ra, 0($sp)
+
+    mul $a0, $a0, 4
 
 sectors_scanning:
     
@@ -290,6 +282,12 @@ more_dust:
 not_more_dust:
     
     addi $t0, $t0, 4
+    
+    #skip $a0 sector
+    bne $t0, $a0, reg_scan
+    addi $t0, $t0, 4
+reg_scan:
+
     j find_densest_sector
 
 found_dense_sector:     #t4 has number of particles in densest sector
@@ -498,7 +496,21 @@ adj_y_to_plan:
 
 at_plan_xy: 
 
-    #maybe calculate sector number and return that
+    # calculate sector number and return that
+    lw $t0, BOT_X
+    lw $t1, BOT_Y
+    
+    li $t4, 37
+
+    div $t0, $t4
+    mflo $t2          #$t2 has sector number in x direction
+
+    div $t1, $t4
+    mflo $t3          #$t3 has sector number in y direction
+    
+    mul $v0, $t3, 8
+    add $v0, $v0, $t2
+
     lw $ra, 0($sp)
     add $sp, $sp, 4
     jr $ra
