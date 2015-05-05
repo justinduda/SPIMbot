@@ -92,6 +92,9 @@ interrupt_dispatch:			# Interrupt:
     and $a0, $k0, SCAN_MASK     # scan interrupt?
     bne $a0, 0, scan_interrupt
 
+    and $a0, $k0, INTERFERENCE_MASK
+    bne $a0, 0, interference_interrupt #interference interrupt
+
 	# add dispatch for other interrupt types here.
 
 	li	$v0, PRINT_STRING	# Unhandled interrupt types
@@ -111,6 +114,12 @@ energy_interrupt:
     li $a0, 1
     sw $a0, ENERGY_ACKNOWLEDGE
     
+    j interrupt_dispatch
+
+interference_interrupt:
+    li $a0, 1
+    sw $a0, INTERFERENCE_ACK
+
     j interrupt_dispatch
 
 non_intrpt:				# was some non-interrupt
@@ -145,6 +154,7 @@ enable_interrupts:
 	#li	$t4, TIMER_MASK		# timer interrupt enable bit
     li 	$t4	SCAN_MASK  		# scan interrupt bit
     or  $t4	$t4	ENERGY_MASK
+    or  $t4,$t4, INTERFERENCE_MASK #interference mask
 	or	$t4	$t4	1			# global interrupt enable
 	mtc0	$t4	$12			# set interrupt mask (Status register)
 
@@ -192,6 +202,7 @@ one_scan_done:
     addi $t0, $t0, 1 
     j sectors_scanning
     
+.globl scans_done
 scans_done:
 
     #store the sector address with the greatest number of dust in t0
@@ -428,23 +439,13 @@ at_plan_xy:
    
     li $t0, 0
     sw $t0, FIELD_STRENGTH
+
+    lw $t1, ENERGY 
+    jal solve_puzzle
     
     j start_over
 
+solve_puzzle:
+    jr $ra
 
-infinite: 
-	j      infinite
 
-find_largest_cluster_strategy:
-
-strategy_B:
-
-strategy_C:
-
-scan_subroutine:
-
-move_to_location_subroutine:
-
-game_over:
-	#clean up local vars
-	jr	$ra
