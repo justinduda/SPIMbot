@@ -167,7 +167,13 @@ enable_interrupts:
     mtc0    $t4 $12         # set interrupt mask (Status register)
 
 
+sub $sp, $sp, 4
+li $a0, 0
+sw $a0, 0($sp)
+
 start_over:
+
+
     li $t0, 0
     sw $t0, SCAN_COMP
 
@@ -176,6 +182,7 @@ start_over:
 
     li $t0, 0             #set t0 to 0
 
+    lw $a0, 0($sp)
 ## Scan for sector with most dust
     jal scan_sectors
 ## $v0 holds sector with most dust
@@ -190,15 +197,11 @@ start_over:
 #
 
 	#max field strength very quickly to pull dust to ship
-    li $t3, 10
-    sw $t3, FIELD_STRENGTH 
 
-
-	#lower field strength to conserve energy
     li $t3, 6
     sw $t3, FIELD_STRENGTH
 
-    li $t3, 3
+    li $t3, 4
     sw $t3, VELOCITY
 
 #
@@ -206,7 +209,7 @@ start_over:
 #
 
     jal drive_to_planet
-
+    lw $v0, 0($sp)
 #
 #returned dust to our planet
 #so turn field off
@@ -404,12 +407,12 @@ align_x_to_plan:
     #If bot is within 3 x-spaces to planet, good enough
     sub $t5, $t3, $t1
     abs $t5, $t5
-    bgt $t5, 3, xy_not_eq 
+    bgt $t5, 2, xy_not_eq 
 
     #If bot is within 3 y-spaces to planet, good enough
     sub $t5, $t4, $t2
     abs $t5, $t5
-    bgt $t5, 3, xy_not_eq 
+    bgt $t5, 2, xy_not_eq 
     
     #bne $t3, $t1, xy_not_eq
     #bne $t4, $t2, xy_not_eq
